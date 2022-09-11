@@ -132,6 +132,35 @@ ContFramePool::ContFramePool(unsigned long _base_frame_no,
                              unsigned long _info_frame_no)
 {
     // TODO: IMPLEMENTATION NEEEDED!
+    // Bitmap must fit in a single frame!
+    assert(_nframes <= FRAME_SIZE * 8);
+
+    base_frame_no = _base_frame_no;
+    nframes = _nframes;
+    nFreeFrames = _nframes;
+    info_frame_no = _info_frame_no;
+
+    // If _info_frame_no is zero then we keep management info in the first
+    //frame, else we use the provided frame to keep management info
+    if(info_frame_no == 0) {
+        bitmap = (unsigned char *) (base_frame_no * FRAME_SIZE);
+    } else {
+        bitmap = (unsigned char *) (info_frame_no * FRAME_SIZE);
+    }
+   
+    // Everything ok. Proceed to mark all frame as free.
+    for(int fno = 0; fno < _nframes; fno++) {
+        set_state(fno, FrameState::Free);
+    }
+   
+    // Mark the first frame as being used if it is being used
+    if(_info_frame_no == 0) {
+        set_state(0, FrameState::Used);
+        nFreeFrames--;
+    }
+
+    Console::puts("Frame Pool initialized\n");
+
     Console::puts("ContframePool::Constructor not implemented!\n");
     assert(false);
 }
@@ -144,11 +173,44 @@ ContFramePool::FrameState ContFramePool::get_state(unsigned long _frame_no) {
 
 }
 
+void SimpleFramePool::set_state(unsigned long _frame_no, FrameState _state) {
+    unsigned int bitmap_index = _frame_no / 8;
+    unsigned char mask = 0x1 << (_frame_no % 8);
+
+    switch(_state) {
+      case FrameState::Used:
+      bitmap[bitmap_index] ^= mask;
+      break;
+    case FrameState::Free:
+      bitmap[bitmap_index] |= mask;
+      break;
+    }
+
+}
 
 
 unsigned long ContFramePool::get_frames(unsigned int _n_frames)
 {
     // TODO: IMPLEMENTATION NEEEDED!
+
+    // Any frames left to allocate?
+    assert(nFreeFrames > 0);
+
+    // Find a frame that is not being used and return its frame index.
+    // Mark that frame as being used in the bitmap.
+    unsigned int frame_no = 0;
+
+    while(get_state(frame_no) == FrameState::Used) {
+        // This of course can be optimized!
+        frame_no++;
+    }
+
+    // We don't need to check whether we overrun. This is handled by assert(nFreeFrame>0) above.
+    set_state(frame_no, FrameState::Used);
+    nFreeFrames--;
+
+    return (frame_no + base_frame_no);
+
     Console::puts("ContframePool::get_frames not implemented!\n");
     assert(false);
 }
@@ -157,6 +219,11 @@ void ContFramePool::mark_inaccessible(unsigned long _base_frame_no,
                                       unsigned long _n_frames)
 {
     // TODO: IMPLEMENTATION NEEEDED!
+    // Mark all frames in the range as being used.
+    for(int fno = _base_frame_no; fno < _base_frame_no + _nframes; fno++){
+        set_state(fno - _base_frame_no, FrameState::Used);
+    }
+
     Console::puts("ContframePool::mark_inaccessible not implemented!\n");
     assert(false);
 }
