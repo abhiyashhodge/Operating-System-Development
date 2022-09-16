@@ -127,6 +127,56 @@
 /* METHODS FOR CLASS   C o n t F r a m e P o o l */
 /*--------------------------------------------------------------------------*/
 
+
+
+unsigned int ContFramePool::frame_traversal(unsigned int frame_no, _n_frames) {
+
+    while((get_state(frame_no) == FrameState::Used) && (frame_no < base_frame_no + _nframes))    {
+        frame_no++;
+    }
+
+    count = 1
+    frame_number = frame_no + 1;
+
+    while((count!=_n_frames) && (frame_no < base_frame_no + _nframes))
+    {
+        if(get_state(frame_number) == FrameState::Free)
+        {
+                count++;
+                if (count == _n_frames)
+                {
+                        break;
+                }
+
+        }
+        else
+        {
+                break;
+        }
+
+    }
+
+
+    if (count == _n_frames)
+    {
+        return(frame_no)
+    }
+
+    if(frame_number < (base_frame_no + _nframes))
+    {
+
+        frame_no = frame_traversal(frame_number)
+        return(frame_no)
+    }
+    else
+    {
+        return(0);
+    }
+
+
+}
+
+
 ContFramePool::ContFramePool(unsigned long _base_frame_no,
                              unsigned long _n_frames,
                              unsigned long _info_frame_no)
@@ -193,26 +243,43 @@ unsigned long ContFramePool::get_frames(unsigned int _n_frames)
 {
     // TODO: IMPLEMENTATION NEEEDED!
 
+
     // Any frames left to allocate?
-    assert(nFreeFrames > 0);
+    assert(nFreeFrames > _n_frames);
 
     // Find a frame that is not being used and return its frame index.
     // Mark that frame as being used in the bitmap.
-    unsigned int frame_no = 0;
+    //unsigned int frame_no = 0;
+    unsigned int frame_final_number = 0;
 
+    /*
     while(get_state(frame_no) == FrameState::Used) {
         // This of course can be optimized!
         frame_no++;
     }
+    */
 
-    // We don't need to check whether we overrun. This is handled by assert(nFreeFrame>0) above.
-    set_state(frame_no, FrameState::Used);
-    nFreeFrames--;
+    frame_final_number = frame_traversal(frame_final_number, _n_frames);
 
-    return (frame_no + base_frame_no);
+    int count = 0;
+    if(frame_final_number > 0)
+    {
+                while(count == _n_frames)
+                {
+                        // We don't need to check whether we overrun. This is handled by assert(nFreeFrame>0) above.
+                        set_state(frame_final_number+count, FrameState::Used);
+                        nFreeFrames--;
+                        count++;
+                }
+    }
 
-    Console::puts("ContframePool::get_frames not implemented!\n");
-    assert(false);
+
+    return (frame_final_number + base_frame_no);
+
+
+
+    // Console::puts("ContframePool::get_frames not implemented!\n");
+    // assert(false);
 }
 
 void ContFramePool::mark_inaccessible(unsigned long _base_frame_no,
