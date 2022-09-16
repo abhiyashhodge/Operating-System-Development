@@ -125,7 +125,7 @@ void test_memory(ContFramePool * _pool, unsigned int _allocs_to_go) {
                 for(;;); 
             }
         }
-        ContFramePool::release_frames(frame);
+        ContFramePool::release_frames(frame, _pool);
     }
 }
 

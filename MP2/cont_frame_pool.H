@@ -55,7 +55,7 @@ private:
 
     FrameState get_state(unsigned long _frame_no);
     void set_state(unsigned long _frame_no, FrameState _state);
-    unsigned int frame_traversal(unsigned int frame_no, _n_frames);
+    unsigned int frame_traversal(unsigned int frame_no, unsigned int _n_frames);
     short int countSetBits(unsigned int n);
     
     
@@ -100,7 +100,7 @@ public:
      _n_frames: Number of contiguous frames to mark as inaccessible.
      */
     
-    static void release_frames(unsigned long _first_frame_no);
+    static void release_frames(unsigned long _first_frame_no, ContFramePool * _pool);
     /*
      Releases a previously allocated contiguous sequence of frames
      back to its frame pool.
