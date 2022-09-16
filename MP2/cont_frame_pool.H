@@ -51,10 +51,12 @@ private:
     
     /* ---- STATE MANAGEMENT */
     
-    enum class FrameState {Free, Used, HoS};
+    enum class FrameState {Free, Used, Head_Of_Sequence};
 
     FrameState get_state(unsigned long _frame_no);
     void set_state(unsigned long _frame_no, FrameState _state);
+    unsigned int frame_traversal(unsigned int frame_no, _n_frames);
+    short int countSetBits(unsigned int n);
     
     
 public:
@@ -80,7 +82,7 @@ public:
      is initialized.
      */
     
-    unsigned long get_frames(unsigned int _n_frames);
+    unsigned long get_frames(unsigned int _n_frames, unsigned int base_framee_noo);
     /*
      Allocates a number of contiguous frames from the frame pool.
      _n_frames: Size of contiguous physical memory to allocate,

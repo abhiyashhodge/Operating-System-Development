@@ -77,7 +77,7 @@ int main() {
 /*
     unsigned long n_info_frames = ContFramePool::needed_info_frames(PROCESS_POOL_SIZE);
 
-    unsigned long process_mem_pool_info_frame = kernel_mem_pool.get_frames(n_info_frames);
+    unsigned long process_mem_pool_info_frame = kernel_mem_pool.get_frames(n_info_frames, PROCESS_POOL_START_FRAME);
     
     ContFramePool process_mem_pool(PROCESS_POOL_START_FRAME,
                                    PROCESS_POOL_SIZE,
@@ -109,7 +109,7 @@ void test_memory(ContFramePool * _pool, unsigned int _allocs_to_go) {
     Console::puts("alloc_to_go = "); Console::puti(_allocs_to_go); Console::puts("\n");
     if (_allocs_to_go > 0) {
         int n_frames = _allocs_to_go % 4 + 1;
-        unsigned long frame = _pool->get_frames(n_frames);
+        unsigned long frame = _pool->get_frames(n_frames, PROCESS_POOL_START_FRAME);
         int * value_array = (int*)(frame * (4 KB));        
         for (int i = 0; i < (1 KB) * n_frames; i++) {
             value_array[i] = _allocs_to_go;
