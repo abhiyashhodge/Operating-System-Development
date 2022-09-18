@@ -129,19 +129,25 @@
 
 
 unsigned int ContFramePool::frame_traversal(unsigned int frame_no, unsigned int _n_frames) {
-
-    while((get_state(frame_no) == FrameState::Used) && (frame_no < base_frame_no + this->nframes))    {
-        frame_no++;
+    //Console::puts("frame no in frame traversal = "); Console::puti(frame_no); Console::puts("\n");
+//    Console::puts("state of frame "); Console::puti((int)get_state(frame_no)); Console::puts("\n");
+//    Console::puts(" NO of frames = "); Console::puti(_n_frames); Console::puts("\n");
+//    Console::puts(" bitmap status before... = "); Console::puti(this->bitmap[0]); Console::puts("\n");
+    unsigned int frame_number = frame_no;
+    while(((get_state(frame_number) == FrameState::Used) || (get_state(frame_number) == FrameState::Head_Of_Sequence)) && (frame_number < base_frame_no + this->nframes))    {
+//        Console::puts("frame no in frame traversal = "); Console::puti(frame_number); Console::puts("\n");
+ //       Console::puts("state of frame "); Console::puti((int)get_state(frame_number)); Console::puts("\n");
+        frame_number++;
     }
 
     int count = 1;
-    unsigned int frame_number = frame_no + 1;
-
-    while((count!=_n_frames) && (frame_no < base_frame_no + this->nframes))
+    frame_no = frame_number;
+    while((count<_n_frames) && (frame_number < base_frame_no + this->nframes))
     {
         if(get_state(frame_number) == FrameState::Free)
         {
                 count++;
+                frame_number++;
                 if (count == _n_frames)
                 {
                         break;
@@ -182,6 +188,7 @@ ContFramePool::ContFramePool(unsigned long _base_frame_no,
 {
     // TODO: IMPLEMENTATION NEEEDED!
     // Bitmap must fit in a single frame!
+  //  Console::puts("Abhiyashhhhh - in Constructor");
     assert(_nframes <= FRAME_SIZE * 4);
 
     base_frame_no = _base_frame_no;
@@ -198,28 +205,29 @@ ContFramePool::ContFramePool(unsigned long _base_frame_no,
     }
    
     // Everything ok. Proceed to mark all frame as free.
-    for(int fno = 0; fno < _nframes; fno++) {
+    for(unsigned int fno = base_frame_no; fno < base_frame_no + _nframes; fno++) {
         set_state(fno, FrameState::Free);
     }
    
     // Mark the first frame as being used if it is being used
     if(_info_frame_no == 0) {
-        set_state(0, FrameState::Used);
+        set_state(base_frame_no, FrameState::Head_Of_Sequence);
         nFreeFrames--;
     }
 
-    Console::puts("Frame Pool initialized\n");
+   // Console::puts("Frame Pool initialized = "); Console::puti(_base_frame_no); Console::puts("\n");
 
     //Console::puts("ContframePool::Constructor not implemented!\n");
     //assert(false);
 }
 
 ContFramePool::FrameState ContFramePool::get_state(unsigned long _frame_no) {
+    _frame_no = _frame_no - base_frame_no;
     unsigned int bitmap_index = _frame_no / 4;
     int bit_manipulation = _frame_no % 4;
 
-    unsigned char mask = 0x1 << (bit_manipulation+1);
-    unsigned char two_bit_mask = mask | 0x1 << (bit_manipulation+2);
+    unsigned char mask = 0x1 << (bit_manipulation*2);
+    unsigned char two_bit_mask = mask | 0x1 << ((bit_manipulation*2)+1);
  
 
     if(countSetBits(bitmap[bitmap_index] & two_bit_mask) == 0)
@@ -251,6 +259,7 @@ short int ContFramePool::countSetBits(unsigned int n)
 }
 
 void ContFramePool::set_state(unsigned long _frame_no, FrameState _state) {
+    _frame_no = _frame_no - base_frame_no;
     unsigned int bitmap_index = _frame_no / 4;
     int bit_manipulation = _frame_no % 4;
     unsigned char mask;
@@ -258,22 +267,23 @@ void ContFramePool::set_state(unsigned long _frame_no, FrameState _state) {
 
     switch(_state) {
     case FrameState::Head_Of_Sequence:
-      mask = 0x1 << (bit_manipulation+1);
-      two_bit_mask = mask | 0x1 << (bit_manipulation+2);
+      mask = 0x1 << (bit_manipulation*2);
+      two_bit_mask = mask | 0x1 << ((bit_manipulation*2)+1);
       bitmap[bitmap_index] |= two_bit_mask;
       break;
     case FrameState::Used:
-      mask = 0x1 << (bit_manipulation+2);
+      mask = 0x1 << ((bit_manipulation*2)+1);
       bitmap[bitmap_index] |= mask;
-      mask |= 0x1 << (bit_manipulation+1);
+      two_bit_mask = 0x1 << (bit_manipulation*2);
       bitmap[bitmap_index] &= ~(two_bit_mask);
       break;
     case FrameState::Free:
-      mask = 0x1 << (bit_manipulation+1);
-      two_bit_mask = mask | 0x1 << (bit_manipulation+2);
+      mask = 0x1 << (bit_manipulation*2);
+      two_bit_mask = mask | 0x1 << ((bit_manipulation*2)+1);
       bitmap[bitmap_index] &= ~(two_bit_mask);
       break;
     }
+//    Console::puts(" In setting frame  = "); Console::puti( _frame_no); Console::puts("     "); Console::puti(bitmap[bitmap_index]); Console::puts("\n");
 
 }
 
@@ -303,7 +313,7 @@ unsigned long ContFramePool::get_frames(unsigned int _n_frames, unsigned int bas
     int count = 0;
     if(frame_final_number > 0)
     {
-                while(count == _n_frames)
+                while(count != _n_frames)
                 {
                         // We don't need to check whether we overrun. This is handled by assert(nFreeFrame>0) above.
                         if(count == 0)
@@ -323,7 +333,8 @@ unsigned long ContFramePool::get_frames(unsigned int _n_frames, unsigned int bas
     }
 
 
-    return (frame_final_number + base_frame_no);
+    // return (frame_final_number + base_frame_no);
+    return (frame_final_number);
 
 
 
@@ -336,8 +347,9 @@ void ContFramePool::mark_inaccessible(unsigned long _base_frame_no,
 {
     // TODO: IMPLEMENTATION NEEEDED!
     // Mark all frames in the range as being used.
-    for(int fno = _base_frame_no; fno < _base_frame_no + this->nframes; fno++){
-        set_state(fno - _base_frame_no, FrameState::Used);
+    for(int fno = _base_frame_no; fno < _base_frame_no + _n_frames; fno++){
+        //set_state(fno - _base_frame_no, FrameState::Used);
+        set_state(fno, FrameState::Used);
     }
 
    // Console::puts("ContframePool::mark_inaccessible not implemented!\n");
@@ -349,14 +361,15 @@ void ContFramePool::release_frames(unsigned long _first_frame_no, ContFramePool 
    
    if(_pool->get_state(_first_frame_no) == FrameState::Head_Of_Sequence)
    {
+   //      Console::puts("Head of Sequence Not Detected in ifff part\n");
 	_pool->set_state(_first_frame_no, FrameState::Free);
    }
-   /*
    else
    {
-	printf("\nHead of Sequence Not Detected\n");
+     //    Console::puts("Head of Sequence Not Detected\n");
+ //	printf("\nHead of Sequence Not Detected\n");
    }
-   */
+   
 
    while(_pool->get_state(++_first_frame_no) == FrameState::Used)
    {
