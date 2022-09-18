@@ -67,7 +67,6 @@ int main() {
 
     /* ---- KERNEL POOL -- */
     
-   // Console::puts("Abhiyashhhhh - in start of kernel.c");
     ContFramePool kernel_mem_pool(KERNEL_POOL_START_FRAME,
                                   KERNEL_POOL_SIZE,
                                   0);
@@ -75,21 +74,17 @@ int main() {
 
     /* ---- PROCESS POOL -- */
 
-/*
+    /*
     unsigned long n_info_frames = ContFramePool::needed_info_frames(PROCESS_POOL_SIZE);
 
- //   Console::puts(" n info frames in kernel.c = "); Console::puti(n_info_frames); Console::puts("\n");
-
-    unsigned long process_mem_pool_info_frame = kernel_mem_pool.get_frames(n_info_frames, PROCESS_POOL_START_FRAME);
-
- //   Console::puts(" process_mem_pool_info_frame = "); Console::puti(process_mem_pool_info_frame); Console::puts("\n");   
+    unsigned long process_mem_pool_info_frame = kernel_mem_pool.get_frames(n_info_frames);
  
     ContFramePool process_mem_pool(PROCESS_POOL_START_FRAME,
                                    PROCESS_POOL_SIZE,
                                    process_mem_pool_info_frame);
     
     process_mem_pool.mark_inaccessible(MEM_HOLE_START_FRAME, MEM_HOLE_SIZE);
-*/
+    */
     /* -- MOST OF WHAT WE NEED IS SETUP. THE KERNEL CAN START. */
 
     Console::puts("Hello World!\n");
@@ -112,21 +107,14 @@ int main() {
 
 void test_memory(ContFramePool * _pool, unsigned int _allocs_to_go) {
     Console::puts("alloc_to_go = "); Console::puti(_allocs_to_go); Console::puts("\n");
-//    Console::puts("Abhiyashhhhh - in test memory\n");
-//    Console::puts("Abhiyashhhhh - in test memory  23534537 \n");
     if (_allocs_to_go > 0) {
         int n_frames = _allocs_to_go % 4 + 1;
-//       Console::puts(" bitmap status before... = "); Console::puti(_pool->bitmap[0]); Console::puts("\n");
-        unsigned long frame = _pool->get_frames(n_frames, KERNEL_POOL_START_FRAME);
-       // Console::puts(" Kernel Pool start frame no = "); Console::puti(KERNEL_POOL_START_FRAME); Console::puts("\n");
-       // Console::puts("n_frames = "); Console::puti(n_frames); Console::puts("\n");
-       // Console::puts("frame  = "); Console::puti(KERNEL_POOL_START_FRAME); Console::puts("\n");
+        unsigned long frame = _pool->get_frames(n_frames);
         int * value_array = (int*)(frame * (4 KB));        
         for (int i = 0; i < (1 KB) * n_frames; i++) {
             value_array[i] = _allocs_to_go;
         }
         test_memory(_pool, _allocs_to_go - 1);
- //       Console::puts("alloc_to_go = "); Console::puti(_allocs_to_go); Console::puts("\n");
         for (int i = 0; i < (1 KB) * n_frames; i++) {
             if(value_array[i] != _allocs_to_go){
                 Console::puts("MEMORY TEST FAILED. ERROR IN FRAME POOL\n");
@@ -137,8 +125,7 @@ void test_memory(ContFramePool * _pool, unsigned int _allocs_to_go) {
                 for(;;); 
             }
         }
-     //   Console::puts("frame numbers allocated  = "); Console::puti(frame); Console::puts("\n");
-        ContFramePool::release_frames(frame, _pool);
+        ContFramePool::release_frames(frame);
     }
 }
 

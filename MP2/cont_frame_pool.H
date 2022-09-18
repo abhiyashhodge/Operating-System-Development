@@ -51,7 +51,7 @@ private:
     
     /* ---- STATE MANAGEMENT */
     
-    enum class FrameState {Free, Used, Head_Of_Sequence};
+    enum class FrameState {Free, Used, HoS};
 
     FrameState get_state(unsigned long _frame_no);
     void set_state(unsigned long _frame_no, FrameState _state);
@@ -60,6 +60,8 @@ private:
     
     
 public:
+    static ContFramePool *frame_pool_manager;    
+    ContFramePool *frame_pool_manager_next;
 
     // The frame size is the same as the page size, duh...    
     static const unsigned int FRAME_SIZE = Machine::PAGE_SIZE; 
@@ -82,7 +84,7 @@ public:
      is initialized.
      */
     
-    unsigned long get_frames(unsigned int _n_frames, unsigned int base_framee_noo);
+    unsigned long get_frames(unsigned int _n_frames);
     /*
      Allocates a number of contiguous frames from the frame pool.
      _n_frames: Size of contiguous physical memory to allocate,
@@ -100,7 +102,7 @@ public:
      _n_frames: Number of contiguous frames to mark as inaccessible.
      */
     
-    static void release_frames(unsigned long _first_frame_no, ContFramePool * _pool);
+    static void release_frames(unsigned long _first_frame_no);
     /*
      Releases a previously allocated contiguous sequence of frames
      back to its frame pool.
