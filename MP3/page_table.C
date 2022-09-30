@@ -29,13 +29,16 @@ PageTable::PageTable()
 
 void PageTable::load()
 {
-   assert(false);
+   current_page_table = this->page_directory;
+   write_cr3(current_page_table);
+   //assert(false);
    Console::puts("Loaded page table\n");
 }
 
 void PageTable::enable_paging()
 {
-   assert(false);
+   write_cr0(read_cr0() | 0x80000000);
+   //assert(false);
    Console::puts("Enabled paging\n");
 }
 
