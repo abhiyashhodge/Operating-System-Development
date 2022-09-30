@@ -25,6 +25,26 @@ void PageTable::init_paging(ContFramePool * _kernel_mem_pool,
 
 PageTable::PageTable()
 {
+   page_directory = kernel_mem_pool->get_frames(1);
+   unsigned long *page_table =  kernel_mem_pool->get_frames(1);
+
+   unsigned long address = 0;
+   unsigned int i;
+
+   for(i=0; i<1024; i++)
+   {
+	page_table[i] = address | 3;
+	address = address + 4096; 
+   }
+ 
+   page_directory[0] = page_table;
+   page_directory[0] = page_directory[0] | 3;
+
+   for(i=1; i<1024; i++)
+   {
+	page_directory[i] = 0 | 2;
+   }
+
    assert(false);
    Console::puts("Constructed Page Table object\n");
 }
