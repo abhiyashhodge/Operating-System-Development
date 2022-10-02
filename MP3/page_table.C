@@ -35,13 +35,11 @@ PageTable::PageTable()
 
    for(i=0; i<1024; i++)
    {
-	// page_table[i] = (address << 12) | 3;
 	page_table[i] = address | 3;
 	address = address + 4096; 
    }
  
    page_directory[0] = (unsigned long) page_table;
-   // page_directory[0] = (page_directory[0] << 12) | 3;
    page_directory[0] = page_directory[0] | 3;
 
    for(i=1; i<1024; i++)
@@ -58,7 +56,6 @@ void PageTable::load()
 {
    current_page_table = this;
    write_cr3((unsigned long) current_page_table->page_directory);
-   paging_enabled = 0;
    //assert(false);
    Console::puts("Loaded page table\n");
 }
@@ -66,6 +63,7 @@ void PageTable::load()
 void PageTable::enable_paging()
 {
    write_cr0(read_cr0() | 0x80000000);
+   paging_enabled = 1;
    //assert(false);
    Console::puts("Enabled paging\n");
 }
@@ -74,53 +72,55 @@ void PageTable::handle_fault(REGS * _r)
 {
 
    unsigned long fault_add = read_cr2();
-   Console::puts(" In handle fault, fault_add = "); Console::puti(fault_add); Console::puts("\n");
 
    unsigned long directory = (unsigned long) (fault_add/(4 MB));
-
-   Console::puts(" In handle fault, directory = "); Console::puti(directory); Console::puts("\n");
 
    unsigned long page_no = (unsigned long) (fault_add/4096);
    page_no = (int) (page_no % 1024);
 
-   Console::puts(" In handle fault, page_no = "); Console::puti(page_no); Console::puts("\n");
-   Console::puts(" In handle fault, in outside current_page_table->page_directory[directory] = "); Console::puti(current_page_table->page_directory[directory]); Console::puts("\n");
 
    if(((current_page_table->page_directory[directory] & 3) != 3))
-   {  
+   {
+  
 	unsigned long *page_table =  (unsigned long *) (kernel_mem_pool->get_frames(1) * Machine::PAGE_SIZE);
 	unsigned int i;
-
-	Console::puts(" In handle fault, in if page_table = "); Console::puti((unsigned long) page_table); Console::puts("\n");
 
 	for(i=0; i<1024; i++)
 	{
 		page_table[i] = 0 | 2; 
 	}
 
-        //current_page_table->page_directory[directory] = ((unsigned long) page_table << 12) | 3;
-        //page_table[page_no] = (((process_mem_pool->get_frames(1)) * Machine::PAGE_SIZE) << 12) | 3;
-
         current_page_table->page_directory[directory] = ((unsigned long) page_table) | 3;
-	Console::puts(" In handle fault, in if current_page_table->page_directory[directory] = "); Console::puti(current_page_table->page_directory[directory]); Console::puts("\n");
-        page_table[page_no] = ((process_mem_pool->get_frames(1)) * Machine::PAGE_SIZE) | 3;
+
+	if((_r->err_code) & 4)
+	{
+        	page_table[page_no] = ((process_mem_pool->get_frames(1)) * Machine::PAGE_SIZE) | 3;
+	}
+	else
+	{
+        	page_table[page_no] = ((kernel_mem_pool->get_frames(1)) * Machine::PAGE_SIZE) | 3;
+		
+	}
    }
    else
    {   
-	Console::puts(" In handle fault, in else = "); Console::puts("\n");
-        //unsigned long *page_table = (unsigned long *) ((current_page_table->page_directory[directory]) >> 12);
-        //page_table[page_no] = (((process_mem_pool->get_frames(1)) * Machine::PAGE_SIZE) << 12) | 3;
-	Console::puts(" In handle fault, in else current_page_table->page_directory[directory] = "); Console::puti(current_page_table->page_directory[directory]); Console::puts("\n");
 
         unsigned long *page_table = (unsigned long *) ((current_page_table->page_directory[directory] >> 12) << 12);
-	Console::puts(" In handle fault, in else page_table_address read = "); Console::puti((unsigned long) page_table); Console::puts("\n");
-        page_table[page_no] = ((process_mem_pool->get_frames(1)) * Machine::PAGE_SIZE) | 3;
+
+	if((_r->err_code) & 4)
+	{
+        	page_table[page_no] = ((process_mem_pool->get_frames(1)) * Machine::PAGE_SIZE) | 3;
+	}
+	else
+	{
+        	page_table[page_no] = ((kernel_mem_pool->get_frames(1)) * Machine::PAGE_SIZE) | 3;
+		
+	}
    }
 
-   Console::puts(" In handle fault, page_directory value = "); Console::puti((current_page_table->page_directory[directory] & 3)); Console::puts("\n");
 
   //assert(false);
-  Console::puts("handled page fault...................here it is\n");
+  Console::puts("handled page fault\n");
 
 }
 
