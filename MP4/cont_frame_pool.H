@@ -43,7 +43,11 @@ class ContFramePool {
 private:
     /* -- DEFINE YOUR CONT FRAME POOL DATA STRUCTURE(s) HERE. */
     
-    
+    unsigned char * bitmap;        // We implement the simple frame pool with a bitmap
+    unsigned int    nFreeFrames;   //
+    unsigned long   base_frame_no; // Where does the frame pool start in phys mem?
+    unsigned long   nframes;       // Size of the frame pool
+    unsigned long   info_frame_no; // Where do we store the management information?    
     
     /* ---- STATE MANAGEMENT */
     
@@ -51,9 +55,13 @@ private:
 
     FrameState get_state(unsigned long _frame_no);
     void set_state(unsigned long _frame_no, FrameState _state);
+    unsigned int frame_traversal(unsigned int frame_no, unsigned int _n_frames);
+    short int countSetBits(unsigned int n);
     
     
 public:
+    static ContFramePool *frame_pool_manager;    
+    ContFramePool *frame_pool_manager_next;
 
     // The frame size is the same as the page size, duh...    
     static const unsigned int FRAME_SIZE = Machine::PAGE_SIZE; 
