@@ -18,6 +18,9 @@
 /* DEFINES */
 /*--------------------------------------------------------------------------*/
 
+#define VM_POOL_SIZE 5
+
+
 /* -- (none) -- */
 
 /*--------------------------------------------------------------------------*/
@@ -55,6 +58,10 @@ private:
     
     /* DATA FOR CURRENT PAGE TABLE */
     unsigned long        * page_directory;     /* where is page directory located? */
+
+    VMPool *               reg_vm_pool[VM_POOL_SIZE];
+    unsigned int           vm_pool_no;
+
     
 public:
     static const unsigned int PAGE_SIZE        = Machine::PAGE_SIZE;

@@ -21,6 +21,9 @@
 
 /* -- (none) -- */
 
+
+#define MAX_REGIONS 500
+
 /*--------------------------------------------------------------------------*/
 /* INCLUDES */
 /*--------------------------------------------------------------------------*/
@@ -33,6 +36,13 @@
 /* DATA STRUCTURES */
 /*--------------------------------------------------------------------------*/
 
+
+struct regions_info_ {
+	unsigned long base_address;
+	unsigned long size;
+};
+
+
 /* Forward declaration of class PageTable */
 /* We need this to break a circular include sequence. */
 class PageTable;
@@ -44,6 +54,14 @@ class PageTable;
 class VMPool { /* Virtual Memory Pool */
 private:
    /* -- DEFINE YOUR VIRTUAL MEMORY POOL DATA STRUCTURE(s) HERE. */
+    unsigned long  base_address;
+    unsigned long  size;
+    ContFramePool * frame_pool;
+    PageTable     * page_table;     
+
+
+    struct regions_info_ * regions_info;
+    unsigned int region_no;
 
 public:
    VMPool(unsigned long  _base_address,

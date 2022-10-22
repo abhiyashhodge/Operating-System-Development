@@ -31,27 +31,24 @@ PageTable::PageTable()
    unsigned long *page_table =  (unsigned long *) (process_mem_pool->get_frames(1) * Machine::PAGE_SIZE);
 
    unsigned long address = 0;
-   unsigned int i;
 
-   for(i=0; i<1024; i++)
+   for(int i=0; i<1024; i++)
    {
        
-	page_table[i] = 0 | 2;
+	page_table[i] = address | 3;
+        address = address + 4096;
    }
-
-
-   page_table[1023] = (unsigned long) page_table;
  
-   page_directory[0] = (unsigned long) page_table;
-   page_directory[0] = page_directory[0] | 3;
-   page_directory[1023] = (unsigned long) page_directory;
+//   page_directory[0] = (unsigned long) page_table;
+   page_directory[0] = (unsigned long) page_table | 3;
 
-   for(i=1; i<1024; i++)
+   for(int i=1; i<1024; i++)
    {
 	page_directory[i] = 0 | 2;
    }
+   page_directory[1023] = (unsigned long) page_directory | 3;
 
-   for(i=0; i< VM_POOL_SIZE; i++)
+   for(int i=0; i< VM_POOL_SIZE; i++)
    {
 	reg_vm_pool[i] = NULL;
    }
@@ -83,17 +80,19 @@ void PageTable::handle_fault(REGS * _r)
 
    unsigned long fault_add = read_cr2();
 
-   unsigned long directory = (unsigned long) (fault_add/(4 MB));
+   unsigned long directory = fault_add >> 22;
+   unsigned long page_no = fault_add >> 12;
 
-   unsigned long page_no = (unsigned long) (fault_add/4096);
-   page_no = (int) (page_no % 1024);
-
+   unsigned long *page_table = NULL;
    unsigned long error_code = _r->err_code;
 
-   if((error_code & 1) == 0) {
+   unsigned long * current_page_directory = (unsigned long *) 0xFFFFF000;
+
+   if((error_code & 1) == 0) 
+   {
 	int index = -1;
 	VMPool ** vm_pool = current_page_table->reg_vm_pool;
-	for (int = 0; i < current_page_table->vm_pool_no; i++)
+	for (int i = 0; i < current_page_table->vm_pool_no; i++)
 	{
 		if(vm_pool[i] != NULL) 
 		{
@@ -104,48 +103,36 @@ void PageTable::handle_fault(REGS * _r)
 			}
 		}
 	}
+   
+	assert(!(index < 0));
+	
 
-
-
-   if(((current_page_table->page_directory[directory] & 3) != 3))
-   {
+	if(((current_page_directory[directory] & 3) != 3))
+	{
   
-	unsigned long *page_table =  (unsigned long *) (process_mem_pool->get_frames(1) * Machine::PAGE_SIZE);
-	unsigned int i;
+	//	unsigned long *page_table =  (unsigned long *) (process_mem_pool->get_frames(1) * Machine::PAGE_SIZE);
+	        unsigned long *page_table = NULL;
+	        current_page_directory[directory] = (unsigned long) ((process_mem_pool->get_frames(1) * Machine::PAGE_SIZE) | 3);
+		page_table = (unsigned long *) (0xFFC00000 | (directory << 12));
+		unsigned int i;
 
-	for(i=0; i<1024; i++)
-	{
-		page_table[i] = 0 | 2; 
-	}
+		for(i=0; i<1024; i++)
+		{
+			page_table[i] = 0 | 2; 
+		}
 
-        current_page_table->page_directory[directory] = ((unsigned long) page_table) | 3;
+        	page_table[page_no & 0x3FF] = ((kernel_mem_pool->get_frames(1)) * Machine::PAGE_SIZE) | 3;
+		
+   	}
+   	else
+	{   
 
-	if((_r->err_code) & 4)
-	{
-        	page_table[page_no] = ((process_mem_pool->get_frames(1)) * Machine::PAGE_SIZE) | 3;
-	}
-	else
-	{
-        	page_table[page_no] = ((kernel_mem_pool->get_frames(1)) * Machine::PAGE_SIZE) | 3;
+        	unsigned long *page_table = (unsigned long *) (0xFFC00000 | (directory << 12)) ;
+
+        	page_table[page_no & 0x3FF] = ((process_mem_pool->get_frames(1)) * Machine::PAGE_SIZE) | 3;
 		
 	}
    }
-   else
-   {   
-
-        unsigned long *page_table = (unsigned long *) ((current_page_table->page_directory[directory] >> 12) << 12);
-
-	if((_r->err_code) & 4)
-	{
-        	page_table[page_no] = ((process_mem_pool->get_frames(1)) * Machine::PAGE_SIZE) | 3;
-	}
-	else
-	{
-        	page_table[page_no] = ((kernel_mem_pool->get_frames(1)) * Machine::PAGE_SIZE) | 3;
-		
-	}
-   }
-
 
   //assert(false);
   Console::puts("handled page fault\n");
@@ -156,16 +143,37 @@ void PageTable::handle_fault(REGS * _r)
 
 void PageTable::register_pool(VMPool * _vm_pool)
 {
-    assert(false);
-    Console::puts("registered VM pool\n");
+    if (vm_pool_no < VM_POOL_SIZE)
+    {
+	reg_vm_pool[vm_pool_no++] = _vm_pool;
+    	Console::puts("registered VM pool\n");
+    }
+    else
+    {
+        Console::puts(" VM pool full\n");
+    }
+	
+    //assert(false);
 }
 
-void PageTable::free_page(unsigned long _page_no) {
-    assert(false);
+void PageTable::free_page(unsigned long _page_no)
+{
+
+    unsigned long directory = _page_no >> 22;
+    unsigned long page_no = _page_no >> 12;
+
+    unsigned long *page_table = (unsigned long *) (0xFFC00000 | (directory << 12));
+
+    unsigned long frame_no = page_table[page_no & 0x3FF] / (Machine::PAGE_SIZE);
+    process_mem_pool->release_frames(frame_no);
+
+    page_table[page_no & 0x3FF] = 0 | 2;
+
+    //assert(false);
     Console::puts("freed page\n");
 }
 
-
+/*
 unsigned long* PageTable::PDE_address(unsigned long addr) {
 
 
@@ -191,3 +199,4 @@ unsigned long* PageTable::PTE_address(unsigned long addr) {
    return(pte_address);
 
 }
+*/
