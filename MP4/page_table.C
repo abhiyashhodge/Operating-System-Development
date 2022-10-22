@@ -27,26 +27,36 @@ void PageTable::init_paging(ContFramePool * _kernel_mem_pool,
 
 PageTable::PageTable()
 {
-   page_directory = (unsigned long *) (kernel_mem_pool->get_frames(1) * Machine::PAGE_SIZE);
-   unsigned long *page_table =  (unsigned long *) (kernel_mem_pool->get_frames(1) * Machine::PAGE_SIZE);
+   page_directory = (unsigned long *) (process_mem_pool->get_frames(1) * Machine::PAGE_SIZE);
+   unsigned long *page_table =  (unsigned long *) (process_mem_pool->get_frames(1) * Machine::PAGE_SIZE);
 
    unsigned long address = 0;
    unsigned int i;
 
    for(i=0; i<1024; i++)
    {
-	page_table[i] = address | 3;
-	address = address + 4096; 
+       
+	page_table[i] = 0 | 2;
    }
+
+
+   page_table[1023] = (unsigned long) page_table;
  
    page_directory[0] = (unsigned long) page_table;
    page_directory[0] = page_directory[0] | 3;
+   page_directory[1023] = (unsigned long) page_directory;
 
    for(i=1; i<1024; i++)
    {
 	page_directory[i] = 0 | 2;
    }
 
+   for(i=0; i< VM_POOL_SIZE; i++)
+   {
+	reg_vm_pool[i] = NULL;
+   }
+
+   vm_pool_no = 0;
    //assert(false);
    Console::puts("Constructed Page Table object\n");
 }
@@ -78,11 +88,29 @@ void PageTable::handle_fault(REGS * _r)
    unsigned long page_no = (unsigned long) (fault_add/4096);
    page_no = (int) (page_no % 1024);
 
+   unsigned long error_code = _r->err_code;
+
+   if((error_code & 1) == 0) {
+	int index = -1;
+	VMPool ** vm_pool = current_page_table->reg_vm_pool;
+	for (int = 0; i < current_page_table->vm_pool_no; i++)
+	{
+		if(vm_pool[i] != NULL) 
+		{
+			if (vm_pool[i]->is_legitimate(fault_add))
+			{
+				index = i;
+				break;
+			}
+		}
+	}
+
+
 
    if(((current_page_table->page_directory[directory] & 3) != 3))
    {
   
-	unsigned long *page_table =  (unsigned long *) (kernel_mem_pool->get_frames(1) * Machine::PAGE_SIZE);
+	unsigned long *page_table =  (unsigned long *) (process_mem_pool->get_frames(1) * Machine::PAGE_SIZE);
 	unsigned int i;
 
 	for(i=0; i<1024; i++)
@@ -137,3 +165,29 @@ void PageTable::free_page(unsigned long _page_no) {
     Console::puts("freed page\n");
 }
 
+
+unsigned long* PageTable::PDE_address(unsigned long addr) {
+
+
+   unsigned long offset = ((addr << 20) >> 22) << 2;
+
+   unsigned long Pde_address = (1023 << 22);
+    
+   Pde_address | = ((1023 << 22) >> 10);
+   Pde_address | = offset; 
+
+   return(Pde_address);
+}
+
+
+unsigned long* PageTable::PTE_address(unsigned long addr) {
+
+   unsigned long offset_plus_pte = ((addr << 10) >> 12) << 2;
+
+   unsigned long Pte_address = (1023 << 22);
+
+   Pte_address |= offset_plus_pte;
+
+   return(pte_address);
+
+}
