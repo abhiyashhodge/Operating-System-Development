@@ -62,6 +62,8 @@ private:
     VMPool *               reg_vm_pool[VM_POOL_SIZE];
     unsigned int           vm_pool_no;
 
+    unsigned long* PDE_address(unsigned long addr);
+    unsigned long* PTE_address(unsigned long addr);
     
 public:
     static const unsigned int PAGE_SIZE        = Machine::PAGE_SIZE;

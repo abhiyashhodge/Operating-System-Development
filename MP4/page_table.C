@@ -106,13 +106,16 @@ void PageTable::handle_fault(REGS * _r)
    
 	assert(!(index < 0));
 	
+       // unsigned long *PDE_entry = current_page_table->PDE_address(fault_add);
+       // unsigned long *PTE_entry = current_page_table->PTE_address(fault_add);
 
 	if(((current_page_directory[directory] & 3) != 3))
+//	if(((*PDE_entry & 3) != 3))
 	{
   
-	//	unsigned long *page_table =  (unsigned long *) (process_mem_pool->get_frames(1) * Machine::PAGE_SIZE);
 	        unsigned long *page_table = NULL;
 	        current_page_directory[directory] = (unsigned long) ((process_mem_pool->get_frames(1) * Machine::PAGE_SIZE) | 3);
+	       // *PDE_entry = (unsigned long) ((process_mem_pool->get_frames(1) * Machine::PAGE_SIZE) | 3);
 		page_table = (unsigned long *) (0xFFC00000 | (directory << 12));
 		unsigned int i;
 
@@ -121,7 +124,8 @@ void PageTable::handle_fault(REGS * _r)
 			page_table[i] = 0 | 2; 
 		}
 
-        	page_table[page_no & 0x3FF] = ((kernel_mem_pool->get_frames(1)) * Machine::PAGE_SIZE) | 3;
+        	page_table[page_no & 0x3FF] = ((process_mem_pool->get_frames(1)) * Machine::PAGE_SIZE) | 3;
+        	//*PTE_entry = ((process_mem_pool->get_frames(1)) * Machine::PAGE_SIZE) | 3;
 		
    	}
    	else
@@ -130,6 +134,7 @@ void PageTable::handle_fault(REGS * _r)
         	unsigned long *page_table = (unsigned long *) (0xFFC00000 | (directory << 12)) ;
 
         	page_table[page_no & 0x3FF] = ((process_mem_pool->get_frames(1)) * Machine::PAGE_SIZE) | 3;
+        	//*PTE_entry = ((process_mem_pool->get_frames(1)) * Machine::PAGE_SIZE) | 3;
 		
 	}
    }
@@ -173,30 +178,28 @@ void PageTable::free_page(unsigned long _page_no)
     Console::puts("freed page\n");
 }
 
-/*
+
 unsigned long* PageTable::PDE_address(unsigned long addr) {
 
 
-   unsigned long offset = ((addr << 20) >> 22) << 2;
+   unsigned long current_page_directory = 0xFFFFF000;
+   unsigned long directory = addr >> 22;
 
-   unsigned long Pde_address = (1023 << 22);
-    
-   Pde_address | = ((1023 << 22) >> 10);
-   Pde_address | = offset; 
+   unsigned long Pde_address = current_page_directory | directory;
 
-   return(Pde_address);
+   return((unsigned long *)Pde_address);
 }
 
 
 unsigned long* PageTable::PTE_address(unsigned long addr) {
 
-   unsigned long offset_plus_pte = ((addr << 10) >> 12) << 2;
+   unsigned long current_page_directory = 0xFFC00000;
+   unsigned long directory = (addr >> 22);
+   unsigned long page_no = addr >> 12;
 
-   unsigned long Pte_address = (1023 << 22);
+   unsigned long Pte_address = current_page_directory | (directory << 12) | (page_no & 0x3FF);
 
-   Pte_address |= offset_plus_pte;
-
-   return(pte_address);
+   return((unsigned long *)Pte_address);
 
 }
-*/
+
