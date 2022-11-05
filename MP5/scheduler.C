@@ -52,14 +52,27 @@ Scheduler::Scheduler() {
 }
 
 void Scheduler::yield() {
+  if (size_of_queue != 0)
+  {
+	Thread::dispatch_to(ready_queue.remove_from_queue());
+	size_of_queue -= 1;
+  }
+  else
+  {    
+	Console::puts(" Threads not available to dispatch\n");
+  }
  // assert(false);
 }
 
 void Scheduler::resume(Thread * _thread) {
+   ready_queue.add_to_queue(_thread);
+   size_of_queue += 1;
  // assert(false);
 }
 
-void Scheduler::add(Thread * _thread) {
+void Scheduler::add(Thread * _thread) { 
+   ready_queue.add_to_queue(_thread);
+   size_of_queue += 1;
  // assert(false);
 }
 
