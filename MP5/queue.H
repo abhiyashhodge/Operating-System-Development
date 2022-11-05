@@ -1,5 +1,6 @@
-#include "thread.h"
-
+#include "thread.H"
+//#include <cstddef>
+#include "utils.H"
 
 class My_queue
 {
@@ -31,8 +32,8 @@ class My_queue
 					next->add_to_queue(current_thread);
 				}
 			        
-				My_queue* new_queue = new Queue();
-				new_queue->set_thread(current->thread);
+				My_queue* new_queue = new My_queue();
+				new_queue->set_thread(current_thread);
 				next = new_queue;
 				delete new_queue;
 			}
@@ -62,7 +63,7 @@ class My_queue
 		}
 
 		
-}
+};
 	
 
 
