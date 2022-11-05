@@ -45,7 +45,7 @@ class My_queue
 			
 		}
 
-		Thread *remove_from_queue()
+		Thread *remove_from_queue()      //Remove first from the queue
 		{
 			if(my_thread == NULL)
 				return NULL;
