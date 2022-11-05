@@ -77,5 +77,22 @@ void Scheduler::add(Thread * _thread) {
 }
 
 void Scheduler::terminate(Thread * _thread) {
+  int temp = size_of_queue;
+
+  while(temp >= 0)
+  {
+	Thread *removed_thread = ready_queue.remove_from_queue();
+	temp -= 1;
+        if(removed_thread->ThreadId() == _thread->ThreadId())
+	{
+		size_of_queue -= 1;
+        }
+        else
+        {
+		ready_queue.add_to_queue(removed_thread);
+	}
+  }
+
+
  // assert(false);
 }

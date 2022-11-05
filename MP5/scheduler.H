@@ -20,6 +20,7 @@
 /*--------------------------------------------------------------------------*/
 
 #include "thread.H"
+#include "queue.H"
 
 /*--------------------------------------------------------------------------*/
 /* !!! IMPLEMENTATION HINT !!! */
@@ -57,6 +58,9 @@
 class Scheduler {
 
   /* The scheduler may need private members... */
+
+	int size_of_queue;
+	My_queue ready_queue;
   
 public:
 
