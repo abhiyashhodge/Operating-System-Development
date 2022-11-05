@@ -1,5 +1,4 @@
 #include "thread.H"
-//#include <cstddef>
 #include "utils.H"
 
 class My_queue
@@ -17,13 +16,13 @@ class My_queue
 			next = NULL;
 		}
 
-		void set_thread(Thread* new_thread)
+		void set_thread(Thread* _thread)
 		{
-			my_thread = new_thread;
+			my_thread = _thread;
 			next = NULL;
 		}
 
-		void add_to_queue(Thread *new_thread)   //Add at the end of the queue
+		void add_to_queue(Thread *this_thread)   //Add at the end of the queue
 		{
 
 			if(my_thread != NULL)
@@ -36,13 +35,11 @@ class My_queue
 			        
 				temp->next = new My_queue();
 				temp = temp->next;
-				temp->set_thread(new_thread);
-				//next = new_queue;
-				//delete new_queue;
+				temp->set_thread(this_thread);
 			}
 			else
 			{
-				my_thread = new_thread;
+				my_thread = this_thread;
 			}
 					
 			
