@@ -23,6 +23,7 @@
 #include "assert.H"
 #include "simple_keyboard.H"
 
+
 /*--------------------------------------------------------------------------*/
 /* DATA STRUCTURES */
 /*--------------------------------------------------------------------------*/
@@ -54,8 +55,11 @@ Scheduler::Scheduler() {
 void Scheduler::yield() {
   if (size_of_queue != 0)
   {
-	Thread::dispatch_to(ready_queue.remove_from_queue());
+   	Console::puts("yield: "); Console::puti(size_of_queue); Console::puts("\n");
 	size_of_queue -= 1;
+	Thread* new_thread = ready_queue.remove_from_queue();
+   	Console::puts("yield: "); Console::puti(new_thread->ThreadId()); Console::puts("\n");
+	Thread::dispatch_to(new_thread);
   }
   else
   {    
@@ -67,6 +71,7 @@ void Scheduler::yield() {
 void Scheduler::resume(Thread * _thread) {
    ready_queue.add_to_queue(_thread);
    size_of_queue += 1;
+   Console::puts("Resume: "); Console::puti(_thread->ThreadId());
  // assert(false);
 }
 
@@ -79,7 +84,7 @@ void Scheduler::add(Thread * _thread) {
 void Scheduler::terminate(Thread * _thread) {
   int temp = size_of_queue;
 
-  while(temp >= 0)
+  while(temp > 0)
   {
 	Thread *removed_thread = ready_queue.remove_from_queue();
 	temp -= 1;

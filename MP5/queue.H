@@ -17,30 +17,35 @@ class My_queue
 			next = NULL;
 		}
 
-		void set_thread(Thread* current_thread)
+		void set_thread(Thread* new_thread)
 		{
-			my_thread = current_thread;
+			my_thread = new_thread;
 			next = NULL;
 		}
 
-		void add_to_queue(Thread *current_thread)   //Add at the end of the queue
+		void add_to_queue(Thread *new_thread)   //Add at the end of the queue
 		{
+
 			if(my_thread != NULL)
 			{
-				while(next != NULL)
+				My_queue *temp = this;
+				while((temp->next) != NULL)
 				{
-					next->add_to_queue(current_thread);
+					temp=temp->next;
 				}
 			        
-				My_queue* new_queue = new My_queue();
-				new_queue->set_thread(current_thread);
-				next = new_queue;
-				delete new_queue;
+				temp->next = new My_queue();
+				temp = temp->next;
+				temp->set_thread(new_thread);
+				//next = new_queue;
+				//delete new_queue;
 			}
 			else
 			{
-				my_thread = current_thread;
+				my_thread = new_thread;
 			}
+					
+			
 		}
 
 		Thread *remove_from_queue()
