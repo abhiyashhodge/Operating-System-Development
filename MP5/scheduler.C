@@ -53,12 +53,16 @@ Scheduler::Scheduler() {
 }
 
 void Scheduler::yield() {
+
+  Machine::disable_interrupts();
+
   if (size_of_queue != 0)
   {
    	Console::puts("yield: "); Console::puti(size_of_queue); Console::puts("\n");
 	size_of_queue -= 1;
 	Thread* new_thread = ready_queue.remove_from_queue();
    	Console::puts("yield: "); Console::puti(new_thread->ThreadId()); Console::puts("\n");
+  	Machine::enable_interrupts();
 	Thread::dispatch_to(new_thread);
   }
   else
@@ -69,14 +73,18 @@ void Scheduler::yield() {
 }
 
 void Scheduler::resume(Thread * _thread) {
+  Machine::disable_interrupts();
    ready_queue.add_to_queue(_thread);
+  Machine::enable_interrupts();
    size_of_queue += 1;
    Console::puts("Resume: "); Console::puti(_thread->ThreadId());
  // assert(false);
 }
 
 void Scheduler::add(Thread * _thread) { 
+  Machine::disable_interrupts();
    ready_queue.add_to_queue(_thread);
+  Machine::enable_interrupts();
    size_of_queue += 1;
  // assert(false);
 }
