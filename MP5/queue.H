@@ -1,28 +1,30 @@
 #include "thread.H"
 #include "utils.H"
 
-class My_queue
+// NOTE: ALONG WITH REQUIRED REGULAR PART FOR MP5, OPTION 1 IS ALSO IMPLEMENTED
+
+class My_queue                                               //Newly designed class
 {
 
 	private:
-		Thread* my_thread;
+		Thread* my_thread;                             //Private variables declaration
 		My_queue* next;
 
 	public:
 
-		My_queue()
-		{
+		My_queue()				//Constructor
+		{ 
 			my_thread = NULL;
 			next = NULL;
 		}
 
-		void set_thread(Thread* _thread)
+		void set_thread(Thread* _thread)         //Set thread variable in queue object
 		{
 			my_thread = _thread;
 			next = NULL;
 		}
 
-		void add_to_queue(Thread *this_thread)   //Add at the end of the queue
+		void add_to_queue(Thread *this_thread)   //Add element at the end of the queue
 		{
 
 			if(my_thread != NULL)
@@ -45,7 +47,7 @@ class My_queue
 			
 		}
 
-		Thread *remove_from_queue()      //Remove first from the queue
+		Thread *remove_from_queue()      //Remove first element from the queue
 		{
 			if(my_thread == NULL)
 				return NULL;
