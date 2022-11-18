@@ -50,43 +50,56 @@
 
 Scheduler::Scheduler() {
   size_of_queue = 0;
+  this->Disk = NULL;
   // assert(false);
   Console::puts("Constructed Scheduler.\n");
 }
 
 void Scheduler::yield() {
 
-  Machine::disable_interrupts();                             //OPTION 1 IMPLEMENTED: DISABLED INTERRUPTS
-
-  if (size_of_queue != 0)
+  //Machine::disable_interrupts();                             //OPTION 1 IMPLEMENTED: DISABLED INTERRUPTS
+    
+  if(Disk !=NULL && Disk->is_ready() && Disk->size_disk_queue != 0)
   {
-   	Console::puts("yield: "); Console::puti(size_of_queue); Console::puts("\n");
-	size_of_queue -= 1;
-	Thread* new_thread = ready_queue.remove_from_queue();
-   	Console::puts("yield: "); Console::puti(new_thread->ThreadId()); Console::puts("\n");
-  	Machine::enable_interrupts();			    // INTERRUPT ENABLED
-	Thread::dispatch_to(new_thread);
+        Thread *disk_queue_thread = Disk->disk_queue->remove_from_queue();
+        Disk->size_disk_queue -= 1;
+        Thread::dispatch_to(disk_queue_thread);
   }
   else
-  {    
-	Console::puts(" Threads not available to dispatch\n");
+  {	
+  	if (size_of_queue != 0)
+  	{
+   		Console::puts("yield: "); Console::puti(size_of_queue); Console::puts("\n");
+		size_of_queue -= 1;
+		Thread* new_thread = ready_queue.remove_from_queue();
+   		Console::puts("yield: "); Console::puti(new_thread->ThreadId()); Console::puts("\n");
+  		//Machine::enable_interrupts();			    // INTERRUPT ENABLED
+	       Console::puts("In yield before dispatch ...\n");
+
+		Thread::dispatch_to(new_thread);
+  	}
+  	else
+  	{    
+		Console::puts(" Threads not available to dispatch\n");
+  	}
+
   }
  // assert(false);
 }
 
 void Scheduler::resume(Thread * _thread) {
-  Machine::disable_interrupts();              
+//  Machine::disable_interrupts();              
    ready_queue.add_to_queue(_thread);
    size_of_queue += 1;
-  Machine::enable_interrupts();
+//  Machine::enable_interrupts();
    Console::puts("Resume: "); Console::puti(_thread->ThreadId());
  // assert(false);
 }
 
 void Scheduler::add(Thread * _thread) { 
-  Machine::disable_interrupts();          
+//  Machine::disable_interrupts();          
    ready_queue.add_to_queue(_thread);
-  Machine::enable_interrupts();
+//  Machine::enable_interrupts();
    size_of_queue += 1;
  // assert(false);
 }
@@ -110,4 +123,9 @@ void Scheduler::terminate(Thread * _thread) {
 
 
  // assert(false);
+}
+
+
+void Scheduler::add_disk(BlockingDisk * disk) {
+    Disk = disk;
 }

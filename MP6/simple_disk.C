@@ -77,9 +77,13 @@ void SimpleDisk::read(unsigned long _block_no, unsigned char * _buf) {
 /* Reads 512 Bytes in the given block of the given disk drive and copies them 
    to the given buffer. No error check! */
 
+
+         Console::puts(" In read of simple disk...\n");
+
   issue_operation(DISK_OPERATION::READ, _block_no);
 
   wait_until_ready();
+         Console::puts(" In read of simple disk after wait until ready...\n");
 
   /* read data from port */
   int i;
