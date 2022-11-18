@@ -47,7 +47,7 @@ class My_queue                                               //Newly designed cl
 			
 		}
 
-		Thread* remove_from_queue()      //Remove first element from the queue
+		Thread *remove_from_queue()      //Remove first element from the queue
 		{
 			if(my_thread == NULL)
 				return NULL;
@@ -68,3 +68,11 @@ class My_queue                                               //Newly designed cl
 
 		
 };
+	
+
+
+
+
+
+
+

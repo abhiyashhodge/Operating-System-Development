@@ -13,6 +13,7 @@
 
 */
 
+
 /*--------------------------------------------------------------------------*/
 /* DEFINES */
 /*--------------------------------------------------------------------------*/
@@ -42,7 +43,7 @@
 #include "interrupts.H"
 
 #include "simple_timer.H"    /* TIMER MANAGEMENT  */
-//#include "queue.H"
+
 #include "frame_pool.H"      /* MEMORY MANAGEMENT */
 #include "mem_pool.H"
 
@@ -104,7 +105,7 @@ Scheduler * SYSTEM_SCHEDULER;
 /*--------------------------------------------------------------------------*/
 
 /* -- A POINTER TO THE SYSTEM DISK */
-BlockingDisk *SYSTEM_DISK;
+BlockingDisk * SYSTEM_DISK;
 
 #define SYSTEM_DISK_SIZE (10 MB)
 
@@ -291,7 +292,6 @@ int main() {
     /* -- DISK DEVICE -- */
 
     SYSTEM_DISK = new BlockingDisk(DISK_ID::MASTER, SYSTEM_DISK_SIZE);
-    SYSTEM_SCHEDULER->add_disk(SYSTEM_DISK);
    
     /* NOTE: The timer chip starts periodically firing as 
              soon as we enable interrupts.

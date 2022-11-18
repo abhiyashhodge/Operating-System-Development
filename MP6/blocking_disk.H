@@ -22,7 +22,6 @@
 /*--------------------------------------------------------------------------*/
 
 #include "simple_disk.H"
-#include "thread.H"
 
 /*--------------------------------------------------------------------------*/
 /* DATA STRUCTURES */ 
@@ -30,20 +29,15 @@
 
 /* -- (none) -- */
 
-class My_queue;
 /*--------------------------------------------------------------------------*/
 /* B l o c k i n g D i s k  */
 /*--------------------------------------------------------------------------*/
+
 class BlockingDisk : public SimpleDisk {
 protected:
-    
     void wait_until_ready();
-   // void disk_enqueue(Thread * thread);
-
+	
 public:
-   My_queue* disk_queue;
-   int size_disk_queue;
-
    BlockingDisk(DISK_ID _disk_id, unsigned int _size); 
    /* Creates a BlockingDisk device with the given size connected to the 
       MASTER or SLAVE slot of the primary ATA controller.
@@ -59,8 +53,6 @@ public:
 
    virtual void write(unsigned long _block_no, unsigned char * _buf);
    /* Writes 512 Bytes from the buffer to the given block on the disk. */
-
-    bool is_ready();
 
 };
 

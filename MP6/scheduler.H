@@ -21,7 +21,7 @@
 
 #include "thread.H"
 #include "queue.H"
-#include "blocking_disk.H"
+
 
 
 
@@ -62,7 +62,7 @@
 class Scheduler {
 
   /* The scheduler may need private members... */
-	BlockingDisk *Disk;
+
 	int size_of_queue;
 	My_queue ready_queue;
   
@@ -96,8 +96,6 @@ public:
    /* Remove the given thread from the scheduler in preparation for destruction
       of the thread. 
       Graciously handle the case where the thread wants to terminate itself.*/
-
-   void add_disk(BlockingDisk *disk);
   
 };
 	
