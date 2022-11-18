@@ -105,7 +105,7 @@ Scheduler * SYSTEM_SCHEDULER;
 /*--------------------------------------------------------------------------*/
 
 /* -- A POINTER TO THE SYSTEM DISK */
-BlockingDisk * SYSTEM_DISK;
+BlockingDisk * SYSTEM_DISK;         // Blocking disk pointer used instead of simple disk to run blocking disk non-wait functions 
 
 #define SYSTEM_DISK_SIZE (10 MB)
 
@@ -291,7 +291,7 @@ int main() {
 
     /* -- DISK DEVICE -- */
 
-    SYSTEM_DISK = new BlockingDisk(DISK_ID::MASTER, SYSTEM_DISK_SIZE);
+    SYSTEM_DISK = new BlockingDisk(DISK_ID::MASTER, SYSTEM_DISK_SIZE); // Getting memory for blocking disk object
    
     /* NOTE: The timer chip starts periodically firing as 
              soon as we enable interrupts.

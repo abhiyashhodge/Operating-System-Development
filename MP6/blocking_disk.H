@@ -35,7 +35,7 @@
 
 class BlockingDisk : public SimpleDisk {
 protected:
-    void wait_until_ready();
+    void wait_until_ready();  // Added to overwrite Simple Disk Function
 	
 public:
    BlockingDisk(DISK_ID _disk_id, unsigned int _size); 
