@@ -41,8 +41,18 @@ class FileSystem;
 /*--------------------------------------------------------------------------*/
 
 class File  {
-    
+   // friend class FileSystem;
 private:
+
+    unsigned long fd;
+    unsigned long size;
+ 
+    unsigned long c_block;
+    unsigned long index;
+    unsigned long position;
+
+    FileSystem file_system;
+
     /* -- your file data structures here ... */
     
     /* You will need a reference to the inode, maybe even a reference to the 

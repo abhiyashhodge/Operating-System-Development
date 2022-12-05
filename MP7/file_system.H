@@ -20,6 +20,14 @@
 
 /* -- (none) -- */
 
+#define MB * (0x1 << 20)
+
+#define BLOCK_LIMIT 16
+#define DISK_SIZE (5 MB)
+#define MAX_BLOCKS (DISK_SIZE / BLOCK_SIZE)
+
+
+
 /*--------------------------------------------------------------------------*/
 /* INCLUDES */
 /*--------------------------------------------------------------------------*/
@@ -35,6 +43,16 @@ class FileSystem;
 /*--------------------------------------------------------------------------*/
 /* DATA STRUCTURES */
 /*--------------------------------------------------------------------------*/
+
+
+typedef struct node 
+{
+	unsigned long fd;
+	unsigned long block[BLOCK_LIMIT];
+	unsigned long size;
+	unsigned long b_size;
+}m_node;
+
 
 class Inode
 {
@@ -76,6 +94,13 @@ private:
   /* -- DEFINE YOUR FILE SYSTEM DATA STRUCTURES HERE. */
 
   SimpleDisk *disk;
+
+  unsigned char block_map[512];
+  unsigned long total_blocks;
+
+  unsigned long m_blocks;
+  unsigned long m_nodes;
+
   unsigned int size;
 
   static constexpr unsigned int MAX_INODES = SimpleDisk::BLOCK_SIZE / sizeof(Inode);
@@ -92,7 +117,8 @@ private:
      256kB. (Large enough as a proof of concept.) */
      
   // short GetFreeInode();
-  // int GetFreeBlock();
+  int GetFreeBlock();
+  void FreeBlock(int);
   /* It may be helpful to two functions to hand out free inodes in the inode list and free
      blocks. These functions also come useful to class Inode and File. */
 
@@ -110,7 +136,7 @@ public:
   static bool Format(SimpleDisk *_disk, unsigned int _size);
   /* Wipes any file system from the disk and installs an empty file system of given size. */
 
-  Inode *LookupFile(int _file_id);
+  File *LookupFile(int _file_id);
   /* Find file with given id in file system. If found, return its inode. 
        Otherwise, return null. */
 
