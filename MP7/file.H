@@ -21,13 +21,13 @@
 /* INCLUDES */
 /*--------------------------------------------------------------------------*/
 
-#include "file_system.H"
+#include "simple_disk.H"
 
 /*--------------------------------------------------------------------------*/
 /* FORWARDS */ 
 /*--------------------------------------------------------------------------*/
 
-class Inode;
+//class Inode;
 class FileSystem;
 
 /*--------------------------------------------------------------------------*/
@@ -41,17 +41,14 @@ class FileSystem;
 /*--------------------------------------------------------------------------*/
 
 class File  {
-   // friend class FileSystem;
+    friend class FileSystem;
 private:
 
     unsigned long fd;
-    unsigned long size;
- 
     unsigned long c_block;
-    unsigned long index;
     unsigned long position;
-
-    FileSystem file_system;
+    
+    FileSystem* file_system;
 
     /* -- your file data structures here ... */
     
@@ -70,6 +67,7 @@ private:
 public:
 
     File(FileSystem * _fs, int _id); 
+    File(); 
     /* Constructor for the file handle. Set the ’current position’ to be at the 
        beginning of the file. */
 

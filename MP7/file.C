@@ -21,22 +21,39 @@
 #include "assert.H"
 #include "console.H"
 #include "file.H"
+#include "file_system.H"
 
 /*--------------------------------------------------------------------------*/
 /* CONSTRUCTOR/DESTRUCTOR */
 /*--------------------------------------------------------------------------*/
 
+
+File::File() {
+    Console::puts("Opening file.\n");
+
+    position = 0;
+
+    //assert(false);
+}
+
+
 File::File(FileSystem *_fs, int _id) {
     Console::puts("Opening file.\n");
 
     fd = _id;
-    size = 0;
-
-    index = 1;
     position = 0;
-
     file_system = _fs;
 
+    Inode *temp = _fs->LookupFile(_id);
+
+    if(temp != NULL)
+    {
+	c_block = temp->block;
+    }
+    else
+    {
+    	Console::puts("Opening file: File not initialized.\n");
+    }
     //assert(false);
 }
 
@@ -72,9 +89,6 @@ int File::Read(unsigned int _n, char *_buf) {
         bytes_to_read--;
         read++; 
         position++;
-
-   
-        
     }
 
    // assert(false);
@@ -94,36 +108,46 @@ int File::Write(unsigned int _n, const char *_buf) {
     int write = 0;
     int bytes_to_write = _n;
 
+//    Console::puts("writing to file.... A\n");
 
     memset(block_cache,0,512);
+//    Console::puts("writing to file.... A - B"); Console::puti(c_block);Console::puts("\n");
 
-    file_system->disk->read(c_block, (unsigned char *)block_cache);
+    file_system->disk->read(c_block, block_cache);
+//    Console::puts("writing to file.... B\n");
     //Console::puts("position = "); Console::puti(position);
     while (!EoF() && (bytes_to_write > 0))
     {
+   // 	Console::puts("writing to file.... C\n");
         block_cache[position] = _buf[write];
         write++;
         position++;
         bytes_to_write--;
 
     }
+//    	Console::puts("writing to file.... D\n");
 
     file_system->disk->write(c_block, block_cache);
+//    	Console::puts("writing to file.... E\n");
+
+    return write;
   //  assert(false);
 }
 
 void File::Reset() {
     Console::puts("resetting file\n");
-    assert(false);
+    
     position = 0;
+  //  assert(false);
 }
 
 bool File::EoF() {
     Console::puts("checking for EoF\n");
-    assert(false);
+    
     if(position > 512)
 	return true;
 
     return false;
-
+  //  assert(false);
+   
 }
