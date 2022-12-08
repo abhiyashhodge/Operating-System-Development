@@ -60,10 +60,10 @@ simple_disk.o: simple_disk.C simple_disk.H
 
 # ==== FILE SYSTEM =====
 
-file.o: file.C file.H
+file.o: file.C file.H simple_disk.H file_system.H
 	$(GCC) $(GCC_OPTIONS) -c -o file.o file.C
 
-file_system.o: file_system.C file_system.H simple_disk.H
+file_system.o: file_system.C file_system.H simple_disk.H file.H
 	$(GCC) $(GCC_OPTIONS) -c -o file_system.o file_system.C
 
 # ==== MEMORY =====
