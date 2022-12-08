@@ -28,7 +28,7 @@
 /*--------------------------------------------------------------------------*/
 
 
-File::File() {
+File::File() {                      // Construct file and set its cursor to 0th position
     Console::puts("Opening file.\n");
 
     current_position = 0;
@@ -37,7 +37,7 @@ File::File() {
 }
 
 
-File::File(FileSystem *_fs, int _id) {
+File::File(FileSystem *_fs, int _id) {                 // Parameterized constructor for intialising file member variables
     Console::puts("Opening file.\n");
 
     file_id = _id;
@@ -57,7 +57,7 @@ File::File(FileSystem *_fs, int _id) {
     //assert(false);
 }
 
-File::~File() {
+File::~File() {                                                // File Destructor
     Console::puts("Closing file.\n");
     /* Make sure that you write any cached data to disk. */
     /* Also make sure that the inode in the inode list is updated. */
@@ -67,8 +67,8 @@ File::~File() {
 /* FILE FUNCTIONS */
 /*--------------------------------------------------------------------------*/
 
-int File::Read(unsigned int _n, char *_buf) {
-    Console::puts("reading from file\n");
+int File::Read(unsigned int _n, char *_buf) {			// Function to read contents of the file
+    Console::puts("reading from file\n"); 
 
     if (block_no == -1 || file_system == NULL) {
         Console::puts("File not intialized, file cannot be read \n");
@@ -95,7 +95,7 @@ int File::Read(unsigned int _n, char *_buf) {
     return read_counter;	
 }
 
-int File::Write(unsigned int _n, const char *_buf) {
+int File::Write(unsigned int _n, const char *_buf) {		// Function to write contents in the file
     Console::puts("writing to file\n");
 
     if (block_no == -1 || file_system == NULL) {
@@ -132,14 +132,14 @@ int File::Write(unsigned int _n, const char *_buf) {
   //  assert(false);
 }
 
-void File::Reset() {
+void File::Reset() {			// Reset file cursor to the 0th position
     Console::puts("resetting file\n");
     
     current_position = 0;
   //  assert(false);
 }
 
-bool File::EoF() {
+bool File::EoF() {			// To check whether file reading or writing has reached the end.
     Console::puts("checking for EoF\n");
     
     if(current_position > 512)

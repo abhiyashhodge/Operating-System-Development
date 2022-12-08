@@ -38,6 +38,9 @@
 /* CONSTRUCTOR */
 /*--------------------------------------------------------------------------*/
 
+
+/* STATIC FILE SYSTEM MEMBERS */
+
 SimpleDisk* FileSystem::disk;
 
 unsigned char FileSystem::free_block_bitmap[512];
@@ -47,7 +50,7 @@ unsigned long FileSystem::inode_blocks;
 unsigned int FileSystem::size;
 
 
-FileSystem::FileSystem() {
+FileSystem::FileSystem() { 				// File System Constructor, Initializing member variables.
     Console::puts("In file system constructor.\n");
     disk = NULL;
     total_blocks = 0;
@@ -56,7 +59,7 @@ FileSystem::FileSystem() {
     //assert(false);
 }
 
-FileSystem::~FileSystem() {
+FileSystem::~FileSystem() {                             // File System Destructor 
     Console::puts("unmounting file system\n");
     
     /* Make sure that the inode list and the free list are saved. */
@@ -69,7 +72,7 @@ FileSystem::~FileSystem() {
 /*--------------------------------------------------------------------------*/
 
 
-bool FileSystem::Mount(SimpleDisk * _disk) {
+bool FileSystem::Mount(SimpleDisk * _disk) {                  // File System Mounted on Disk
     Console::puts("mounting file system from disk\n");
     if (disk == NULL)
     {
@@ -80,7 +83,9 @@ bool FileSystem::Mount(SimpleDisk * _disk) {
     //assert(false);
 }
 
-bool FileSystem::Format(SimpleDisk * _disk, unsigned int _size) { // static!
+
+// Create & Populate inode list and free block list on disk
+bool FileSystem::Format(SimpleDisk * _disk, unsigned int _size) { // static!  
     Console::puts("formatting disk\n");
     /* Here you populate the disk with an initialized (probably empty) inode list
        and a free list. Make sure that blocks used for the inodes and for the free list
@@ -123,6 +128,8 @@ bool FileSystem::Format(SimpleDisk * _disk, unsigned int _size) { // static!
     return true;
 }
 
+
+// Looking up for a available file on disk
 Inode * FileSystem::LookupFile(int _file_id) 
 {
     Console::puts("looking up file with id = "); Console::puti(_file_id); Console::puts("\n");
@@ -148,6 +155,7 @@ Inode * FileSystem::LookupFile(int _file_id)
     return NULL;
 }
 
+// Creating a file on disk
 bool FileSystem::CreateFile(int _file_id) {
     Console::puts("creating file with id:"); Console::puti(_file_id); Console::puts("\n");
     /* Here you check if the file exists already. If so, throw an error.
@@ -194,6 +202,8 @@ bool FileSystem::CreateFile(int _file_id) {
     //assert(false);
 }
 
+
+// Deleting a file on disk
 bool FileSystem::DeleteFile(int _file_id) {
     Console::puts("deleting file with id:"); Console::puti(_file_id); Console::puts("\n");
     /* First, check if the file exists. If not, throw an error. 
@@ -234,7 +244,7 @@ bool FileSystem::DeleteFile(int _file_id) {
   return false;
 }
 
-
+// Get a free block available from the disk for use
 int FileSystem::GetFreeBlock() {
 
     // We need to reserve the first inode_blocks in the disk for file system management.
@@ -259,7 +269,7 @@ int FileSystem::GetFreeBlock() {
     return 0;
 }
 
-
+// Freeing the block when the file is deleted
 void FileSystem::FreeBlock(int block_no)
 {
 	int inode_block = block_no / 8;
