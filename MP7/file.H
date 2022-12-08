@@ -27,7 +27,6 @@
 /* FORWARDS */ 
 /*--------------------------------------------------------------------------*/
 
-//class Inode;
 class FileSystem;
 
 /*--------------------------------------------------------------------------*/
@@ -44,9 +43,9 @@ class File  {
     friend class FileSystem;
 private:
 
-    unsigned long fd;
-    unsigned long c_block;
-    unsigned long position;
+    unsigned long file_id;
+    unsigned long block_no;
+    unsigned long current_position;
     
     FileSystem* file_system;
 

@@ -14,9 +14,6 @@
 
     /* -- (none) -- */
 
-
-#define NODES_PER_BLOCK (512/(sizeof(m_node)))
-
 /*--------------------------------------------------------------------------*/
 /* INCLUDES */
 /*--------------------------------------------------------------------------*/
@@ -43,19 +40,18 @@
 
 SimpleDisk* FileSystem::disk;
 
-unsigned char FileSystem::block_map[512];
+unsigned char FileSystem::free_block_bitmap[512];
 unsigned long FileSystem::total_blocks;
 
-unsigned long FileSystem::m_blocks;
+unsigned long FileSystem::inode_blocks;
 unsigned int FileSystem::size;
-
 
 
 FileSystem::FileSystem() {
     Console::puts("In file system constructor.\n");
     disk = NULL;
     total_blocks = 0;
-    m_blocks = 0;
+    inode_blocks = 0;
     size = 0;
     //assert(false);
 }
@@ -78,7 +74,6 @@ bool FileSystem::Mount(SimpleDisk * _disk) {
     if (disk == NULL)
     {
 	disk = _disk;
-	return true;
     }
     /* Here you read the inode list and the free list into memory */
     return true; 
@@ -92,36 +87,35 @@ bool FileSystem::Format(SimpleDisk * _disk, unsigned int _size) { // static!
        are marked as used, otherwise they may get overwritten. */
     disk = _disk;
     size = _size;
+    int i, j;    
     
     total_blocks = ((FileSystem::size)/SimpleDisk::BLOCK_SIZE) + 1;
-    m_blocks = ((total_blocks * sizeof(m_node)) / SimpleDisk::BLOCK_SIZE) + 1;
+    inode_blocks = ((total_blocks * sizeof(I_node)) / SimpleDisk::BLOCK_SIZE) + 1;
 
  
-    for (int j = 0; j < (total_blocks/8); j++)
+    for (j = 0; j < (total_blocks/8); j++)
     {
-	block_map[j] = 0;
+	free_block_bitmap[j] = 0;
     }
 
-    int i;    
-    for (i = 0; i < (m_blocks/8); i++) 
+    for (i = 0; i < (inode_blocks/8); i++) 
     {
-	block_map[i] = 0xFF;
+	free_block_bitmap[i] = 0xFF;
     }
 
-    block_map[i] = 0;
+    free_block_bitmap[i] = 0;
 
 
-   for (int j = 0; j < (m_blocks%8); j++)
+   for (j = 0; j < (inode_blocks%8); j++)
    {
-	block_map[i] = block_map[i] | (1<<j);
+	free_block_bitmap[i] |= (1<<j);
    }
 
-
-   char buf[512];
-   memset(buf, 0, 512);
-   for(int j = 0; j < total_blocks; j++)
+   char block_buffer[512];
+   memset(block_buffer, 0, 512);
+   for(j = 0; j < total_blocks; j++)
    {
-	disk->write(j, (unsigned char *)buf);
+	disk->write(j, (unsigned char *)block_buffer);
    }
     
     //assert(false); 
@@ -132,30 +126,24 @@ bool FileSystem::Format(SimpleDisk * _disk, unsigned int _size) { // static!
 Inode * FileSystem::LookupFile(int _file_id) 
 {
     Console::puts("looking up file with id = "); Console::puti(_file_id); Console::puts("\n");
-//    Console::puts("looking up file size of mnode is:  "); Console::puti(sizeof(m_node)); Console::puts("\n");
 
-    char buf[512];
-
-    memset(buf, 0, 512);
-
-    for(int i=0; i < m_blocks; i++)
+    /* Here you go through the inode list to find the file. */
+    for(int i=0; i < inode_blocks; i++)
     {
-	memset(buf, 0, 512);
-        disk->read(i, (unsigned char *)buf);
- 	m_node* m_node_l = (m_node *)buf;
+	memset(block_buffer, 0, 512);
+        disk->read(i, (unsigned char *)block_buffer);
+ 	I_node* I_node_new = (I_node *)block_buffer;
 
-	for(int j=0;j < NODES_PER_BLOCK;++j)
+	for(int j=0; j < MAX_INODES ; ++j)
 	{
-		if(m_node_l[j].fd == _file_id)
+		if(I_node_new[j].file_id == _file_id)
 		{
-//	                Console::puts("Found file with id ");Console::puti(_file_id);Console::puts("\n");
-        	        return (m_node_l + j);				
+        	        return (I_node_new + j);				
 		}
 	}
 
     }
 
-    /* Here you go through the inode list to find the file. */
     //assert(false);
     return NULL;
 }
@@ -168,41 +156,35 @@ bool FileSystem::CreateFile(int _file_id) {
 
     if (LookupFile(_file_id) != NULL)
     {
-        Console::puts("File already exists with this id, choose new id\n");
+        Console::puts("File already exists with this id, please choose new id to create a new file\n");
         return false;
     }
 
 
-    char buf[512];
-    memset(buf, 0, 512);
-
-    for (int i = 0; i < m_blocks; i++) 
+    for (int i = 0; i < inode_blocks; i++) 
     {
 
-        memset(buf, 0, 512);        //set the buffer to 0, to be used in reading the disk.
-        disk->read (i, (unsigned char *)buf);
-        m_node* m_node_l = (m_node *) buf;
+        memset(block_buffer, 0, 512);        //set the block_bufferfer to 0, to be used in reading the disk.
+        disk->read (i, (unsigned char *)block_buffer);
+        I_node* I_node_new = (I_node *) block_buffer;
 
-        for (int j = 0; j < NODES_PER_BLOCK; j++) 
+        for (int j = 0; j < MAX_INODES; j++) 
 	{
-            if (m_node_l[j].fd == 0) 
+            if (I_node_new[j].file_id == 0) 
 	    {
-                m_node_l[j].fd = _file_id;
+                I_node_new[j].file_id = _file_id;
+                I_node_new[j].block_no = GetFreeBlock();
 
-                m_node_l[j].block = GetFreeBlock();
-                Console::puts("get block inode number "); Console::puti(j); Console::puts("\n");
-		
-   	        //File* file = (File *) new File(this, _file_id);
    	        File* file = new File;
 		
-		file->fd       = _file_id;
-		file->c_block  = m_node_l[j].block;
-		file->position = 0;
+		file->file_id       = _file_id;
+		file->block_no  = I_node_new[j].block_no;
+		file->current_position = 0;
 		file->file_system = this;		 		
 
-		m_node_l[j].filepointer = file;	
+		I_node_new[j].filepointer = file;	
 
-                disk->write(i, (unsigned char *)buf);
+                disk->write(i, (unsigned char *)block_buffer);
                 return true;
             }
         }
@@ -218,26 +200,30 @@ bool FileSystem::DeleteFile(int _file_id) {
        Then free all blocks that belong to the file and delete/invalidate 
        (depending on your implementation of the inode list) the inode. */
 
-    char buf[512];
-    memset(buf,0,512);
 
-    for (int i = 0; i<m_blocks; i++)
+    if (LookupFile(_file_id) == NULL)
     {
-        memset(buf, 0, 512);        //set the buffer to 0, to be used in reading the disk.
-        disk->read (i, (unsigned char *)buf);
-        m_node* m_node_l = (m_node *) buf;
+        Console::puts("File does not exists with this id on file system \n");
+        return false;
+    }
 
-        for (int j = 0; j < NODES_PER_BLOCK; j++) 
+
+    for (int i = 0; i<inode_blocks; i++)
+    {
+        memset(block_buffer, 0, 512);     
+        disk->read (i, (unsigned char *)block_buffer);
+        I_node* I_node_new = (I_node *) block_buffer;
+
+        for (int j = 0; j < MAX_INODES; j++) 
 	{
-  //              Console::puts("delblk inode num "); Console::puti(j); Console::puts(" And value "); Console::puti(m_node_l[j].fd); Console::puts("\n");
-            if (m_node_l[j].fd == _file_id) 
+            if (I_node_new[j].file_id == _file_id) 
 	    {
-//    Console::puts("Inside if deleting file with id:"); Console::puti(_file_id); Console::puts("\n");
-                m_node_l[j].fd = 0;
-                FreeBlock(m_node_l[j].block);
-		delete m_node_l[j].filepointer;
+                I_node_new[j].file_id = 0;
+                FreeBlock(I_node_new[j].block_no);
+                I_node_new[j].block_no = 0;
+		delete I_node_new[j].filepointer;
 
-   	    	disk->write(i, (unsigned char *)buf);
+   	    	disk->write(i, (unsigned char *)block_buffer);
             	return true;
             }
                 
@@ -251,43 +237,35 @@ bool FileSystem::DeleteFile(int _file_id) {
 
 int FileSystem::GetFreeBlock() {
 
-    // We need to reserve the first m_blocks in the disk for file system management.
+    // We need to reserve the first inode_blocks in the disk for file system management.
     //TODO
-
-    Console::puts("Total blocks "); Console::puti(total_blocks/8);Console::puts("\n");
 
     for (int i = 0; i < (total_blocks / 8); i++) 
     {
-        if (block_map[i] != 0xFF) 
+        if (free_block_bitmap[i] != 0xFF) 
 	{
             for (int j = 0; j < 8; j++) 
 	    {
-                if (block_map[i] & (1 << j)) 
+                if (!(free_block_bitmap[i] & (1 << j))) 
 		{
-                    continue;
-                } 
-		else 
-		{
-                    block_map[i] = block_map[i] | (1 << j);
-                    int b= j + i*8;
-                    Console::puts("Allocating block number");Console::puti(b);Console::puts("\n");
-                    return b;
+                    free_block_bitmap[i] |= (1 << j);
+                    int free_block_number = i*8 + j;
+                    return free_block_number;
                 }
             }
         }
     }
-    Console::puts("returning block 0\n");
+
     return 0;
 }
 
 
 void FileSystem::FreeBlock(int block_no)
 {
-	int node = block_no / 8;
-	int index = block_no % 8;
+	int inode_block = block_no / 8;
+	int inode_no = block_no % 8;
 
-    block_map[node] = block_map[node] | (1 << index) ;
-    block_map[node] = block_map[node] ^ (1 << index) ;
+    	free_block_bitmap[inode_block] ^= (1 << inode_no);
 }
 
 

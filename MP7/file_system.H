@@ -20,13 +20,6 @@
 
 /* -- (none) -- */
 
-#define MB * (0x1 << 20)
-
-//#define DISK_SIZE (5 MB)
-//#define MAX_BLOCKS (DISK_SIZE / BLOCK_SIZE)
-
-
-
 /*--------------------------------------------------------------------------*/
 /* INCLUDES */
 /*--------------------------------------------------------------------------*/
@@ -37,8 +30,6 @@
 /*--------------------------------------------------------------------------*/
 /* FORWARDS */
 /*--------------------------------------------------------------------------*/
-
-//class FileSystem;
 
 /*--------------------------------------------------------------------------*/
 /* DATA STRUCTURES */
@@ -52,8 +43,8 @@ typedef class Inode
                            // to the Inode.
 
 public:
-  long fd; // File "name"
-  unsigned long block;
+  long file_id; // File "name"
+  unsigned long block_no;
   /* You will need additional information in the inode, such as allocation 
      information. */
   File *filepointer;
@@ -64,7 +55,7 @@ public:
 
   /* You may need a few additional functions to help read and store the 
      inodes from and to disk. */
-}m_node;
+}I_node;
 
 /*--------------------------------------------------------------------------*/
 /* FORWARD DECLARATIONS */
@@ -86,15 +77,16 @@ private:
 
   static SimpleDisk *disk;
 
-  static unsigned char block_map[512];
+  static unsigned char free_block_bitmap[512];
   static unsigned long total_blocks;
-
-  static unsigned long m_blocks;
+  static unsigned long inode_blocks;
 
   static unsigned int size;
 
   static constexpr unsigned int MAX_INODES = SimpleDisk::BLOCK_SIZE / sizeof(Inode);
   /* Just as an example, you can store MAX_INODES in a single INODES block */
+
+  unsigned char block_buffer[SimpleDisk::BLOCK_SIZE];
 
   //Inode *inodes; // the inode list
   /* The inode list */
@@ -107,8 +99,8 @@ private:
      256kB. (Large enough as a proof of concept.) */
      
   // short GetFreeInode();
-  int GetFreeBlock();
-  void FreeBlock(int);
+     int GetFreeBlock();
+     void FreeBlock(int);
   /* It may be helpful to two functions to hand out free inodes in the inode list and free
      blocks. These functions also come useful to class Inode and File. */
 

@@ -31,7 +31,7 @@
 File::File() {
     Console::puts("Opening file.\n");
 
-    position = 0;
+    current_position = 0;
 
     //assert(false);
 }
@@ -40,15 +40,15 @@ File::File() {
 File::File(FileSystem *_fs, int _id) {
     Console::puts("Opening file.\n");
 
-    fd = _id;
-    position = 0;
+    file_id = _id;
+    current_position = 0;
     file_system = _fs;
 
     Inode *temp = _fs->LookupFile(_id);
 
     if(temp != NULL)
     {
-	c_block = temp->block;
+	block_no = temp->block_no;
     }
     else
     {
@@ -70,81 +70,79 @@ File::~File() {
 int File::Read(unsigned int _n, char *_buf) {
     Console::puts("reading from file\n");
 
-    if (c_block == -1 || file_system == NULL) {
-        Console::puts("File not intialized, can not read \n");
+    if (block_no == -1 || file_system == NULL) {
+        Console::puts("File not intialized, file cannot be read \n");
         return 0;
     }
 
 
-    int read = 0;
-    int bytes_to_read = _n;
+    int read_counter = 0;
+    int chars_to_read = _n;
 
     memset(block_cache,0,512);
     
-    file_system->disk->read(c_block, (unsigned char *)block_cache);
+    file_system->disk->read(block_no, (unsigned char *)block_cache);
 
-    while (!EoF() && (bytes_to_read > 0))
+    while (!EoF() && (chars_to_read > 0))
     {
-        _buf[read] = block_cache[position];
-        bytes_to_read--;
-        read++; 
-        position++;
+        _buf[read_counter] = block_cache[current_position];
+        chars_to_read -= 1;
+        read_counter  += 1; 
+        current_position += 1;
     }
 
    // assert(false);
-    return read;	
+    return read_counter;	
 }
 
 int File::Write(unsigned int _n, const char *_buf) {
     Console::puts("writing to file\n");
 
-    if (c_block == -1 || file_system == NULL) {
-        Console::puts("File not intialized, can not read \n");
+    if (block_no == -1 || file_system == NULL) {
+        Console::puts("File not intialized, cannot write to the file \n");
         return 0;
     }
 
-
-     //Console::puts("passed buffer "); Console::puts(_buf);Console::puts("\n");
-    int write = 0;
-    int bytes_to_write = _n;
+    int write_counter = 0;
+    int chars_to_write = _n;
 
 //    Console::puts("writing to file.... A\n");
 
     memset(block_cache,0,512);
-//    Console::puts("writing to file.... A - B"); Console::puti(c_block);Console::puts("\n");
+//    Console::puts("writing to file.... A - B"); Console::puti(block_no);Console::puts("\n");
 
-    file_system->disk->read(c_block, block_cache);
+    file_system->disk->read(block_no, block_cache);
 //    Console::puts("writing to file.... B\n");
-    //Console::puts("position = "); Console::puti(position);
-    while (!EoF() && (bytes_to_write > 0))
+    //Console::puts("current_position = "); Console::puti(current_position);
+    while (!EoF() && (chars_to_write > 0))
     {
    // 	Console::puts("writing to file.... C\n");
-        block_cache[position] = _buf[write];
-        write++;
-        position++;
-        bytes_to_write--;
+        block_cache[current_position] = _buf[write_counter];
+        chars_to_write -= 1;
+        write_counter  += 1; 
+        current_position += 1;
 
     }
 //    	Console::puts("writing to file.... D\n");
 
-    file_system->disk->write(c_block, block_cache);
+    file_system->disk->write(block_no, block_cache);
 //    	Console::puts("writing to file.... E\n");
 
-    return write;
+    return write_counter;
   //  assert(false);
 }
 
 void File::Reset() {
     Console::puts("resetting file\n");
     
-    position = 0;
+    current_position = 0;
   //  assert(false);
 }
 
 bool File::EoF() {
     Console::puts("checking for EoF\n");
     
-    if(position > 512)
+    if(current_position > 512)
 	return true;
 
     return false;
